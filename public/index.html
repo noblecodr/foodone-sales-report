@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>푸드원시스템 강남구 영업 리스트업</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  /* 푸드원시스템 팜플렛 색감(네이비 #142447 / 골드 #b49259 / 크림 #faf8f3) 기준 */
+  :root {
+    --bg: #faf7f0; --card: #ffffff; --border: #e6dcc4; --border-soft: #f0e8d7;
+    --text: #17233f; --text-muted: #7d7660; --shadow: 0 1px 2px rgba(23,35,63,0.05), 0 1px 10px rgba(23,35,63,0.04);
+    --shadow-hover: 0 4px 16px rgba(23,35,63,0.10);
+    --accent: #a97f3f; --accent-hover: #8c6730; --accent-soft: #f4ead2; --accent-contrast: #ffffff;
+    --a-bg: #e6ebf4; --b-bg: #f1e4c2; --c-bg: #efece1;
+    --a-text: #17233f; --b-text: #6b4a17; --c-text: #55503f;
+    --warn-bg: #fbe6cd; --warn-text: #7a3b06;
+    --radius-lg: 14px; --radius-md: 10px; --radius-sm: 7px;
+  }
+  /* 시스템이 다크모드여도 항상 밝은 버전을 기본으로 쓴다 (2026-07-23 사용자 요청) */
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px clamp(16px, 4vw, 40px); background: var(--bg); color: var(--text);
+    font-family: -apple-system, "Segoe UI", "Pretendard", "Malgun Gothic", sans-serif;
+    font-size: 14px; line-height: 1.5; max-width: 1320px; margin-inline: auto;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1 { font-size: 22px; font-weight: 700; margin: 0 0 5px; letter-spacing: -0.01em; }
+  h2 { font-size: 15px; font-weight: 600; margin: 0 0 10px; }
+  .sub { color: var(--text-muted); margin-bottom: 22px; font-size: 13px; }
+  .panel {
+    background: var(--card); border: 1px solid var(--border-soft); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow); padding: 18px 20px; margin-bottom: 18px;
+  }
+  .filters { display: flex; flex-wrap: wrap; gap: 16px 18px; align-items: flex-end; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 11.5px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; }
+  input[type="text"], select {
+    background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 8px 11px; color: var(--text); font-size: 13.5px; min-width: 160px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  input[type="text"]:focus, select:focus, input[type="number"]:focus {
+    outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .chips { display: flex; gap: 6px; }
+  .chip {
+    border: 1px solid var(--border); border-radius: 999px; padding: 6px 13px; cursor: pointer;
+    user-select: none; font-size: 12.5px; font-weight: 600; background: var(--card); color: var(--text-muted);
+    transition: all 0.15s ease;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--text); }
+  .chip.active { background: var(--accent); border-color: var(--accent); color: var(--accent-contrast); }
+  .count { margin-left: auto; color: var(--text-muted); font-size: 12.5px; align-self: center; font-weight: 500; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--border-soft); }
+  th {
+    font-size: 11.5px; color: var(--text-muted); font-weight: 700; white-space: nowrap; cursor: pointer;
+    text-transform: uppercase; letter-spacing: 0.03em; position: sticky; top: 0; background: var(--card); z-index: 1;
+  }
+  th:hover { color: var(--accent); }
+  td { font-size: 13px; vertical-align: top; }
+  tbody tr { transition: background 0.1s ease; }
+  tbody tr:hover { background: var(--bg); }
+  tbody tr:last-child td { border-bottom: none; }
+  .badge { display: inline-block; border-radius: 6px; padding: 3px 8px; font-size: 11.5px; font-weight: 700; letter-spacing: 0.02em; }
+  .badge-A { background: var(--a-bg); color: var(--a-text); }
+  .badge-B { background: var(--b-bg); color: var(--b-text); }
+  .badge-C { background: var(--c-bg); color: var(--c-text); }
+  .warn { background: var(--warn-bg); color: var(--warn-text); border-radius: 6px; padding: 3px 8px; font-size: 11.5px; font-weight: 600; }
+  a.franchiselink { text-decoration: none; cursor: pointer; }
+  a.franchiselink:hover { text-decoration: underline; }
+  .nearmiss { color: var(--text-muted); font-size: 11px; margin-top: 3px; white-space: nowrap; }
+  .maplink { color: var(--accent); text-decoration: none; font-weight: 600; white-space: nowrap; }
+  .maplink:hover { color: var(--accent-hover); text-decoration: underline; }
+  .pager { display: flex; align-items: center; gap: 10px; margin-top: 16px; justify-content: center; }
+  .pager button {
+    border: 1px solid var(--border); background: var(--card); color: var(--text);
+    border-radius: var(--radius-sm); padding: 7px 14px; cursor: pointer; font-size: 13px; font-weight: 600;
+    transition: all 0.15s ease;
+  }
+  .pager button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .pager button:disabled { opacity: 0.35; cursor: default; }
+  #pageInfo { font-size: 12.5px; color: var(--text-muted); font-weight: 600; }
+  .jump { display: flex; align-items: center; gap: 6px; margin-left: 16px; }
+  .jump input {
+    width: 60px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 6px 8px; color: var(--text); font-size: 13px;
+  }
+  .empty { text-align: center; padding: 48px; color: var(--text-muted); font-size: 13.5px; }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 12.5px; color: var(--text-muted);
+    margin-bottom: 20px; background: var(--card); border: 1px solid var(--border-soft);
+    border-radius: var(--radius-md); padding: 12px 16px; box-shadow: var(--shadow);
+  }
+  .legend b { color: var(--text); font-weight: 700; }
+  .toolbar-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .toolbar button {
+    border: 1px solid transparent; background: var(--accent); color: var(--accent-contrast);
+    border-radius: var(--radius-sm); padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: 700;
+    transition: all 0.15s ease; box-shadow: var(--shadow);
+  }
+  .toolbar button:hover:not(:disabled) { background: var(--accent-hover); box-shadow: var(--shadow-hover); }
+  .toolbar button.secondary { background: var(--card); color: var(--text); border-color: var(--border); box-shadow: none; }
+  .toolbar button.secondary:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: var(--card); }
+  .toolbar button:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+  .toolbar .warn { font-weight: 600; }
+  #selCount { font-weight: 700; font-size: 13px; }
+  .sellist { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .selchip {
+    display: inline-flex; align-items: center; gap: 6px; background: var(--a-bg); color: var(--a-text);
+    border-radius: 999px; padding: 5px 6px 5px 13px; font-size: 12px; font-weight: 700;
+  }
+  .selchip button {
+    border: none; background: transparent; color: inherit; cursor: pointer; font-size: 14px;
+    line-height: 1; padding: 3px 5px; border-radius: 50%; opacity: 0.65; transition: all 0.15s ease;
+  }
+  .selchip button:hover { opacity: 1; background: rgba(0,0,0,0.1); }
+  details.routes {
+    background: var(--card); border: 1px solid var(--border-soft); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow); padding: 18px 20px; margin-bottom: 18px;
+  }
+  details.routes summary {
+    cursor: pointer; font-weight: 700; font-size: 14.5px; list-style: none; display: flex; align-items: center;
+  }
+  details.routes summary::before {
+    content: "▸"; display: inline-block; margin-right: 8px; color: var(--accent);
+    transition: transform 0.15s ease; font-size: 12px;
+  }
+  details.routes[open] summary::before { transform: rotate(90deg); }
+  details.routes summary::-webkit-details-marker { display: none; }
+  .routegrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 12px; margin-top: 16px; }
+  .routecard {
+    border: 1px solid var(--border-soft); border-radius: var(--radius-md); padding: 13px 14px;
+    background: var(--bg); transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  }
+  .routecard:hover { box-shadow: var(--shadow-hover); border-color: var(--border); }
+  .routecard-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 9px; gap: 8px; }
+  .routecard-head b { font-size: 13px; }
+  .routelist { margin: 0; padding-left: 18px; font-size: 12px; color: var(--text-muted); max-height: 140px; overflow-y: auto; }
+  .routelist li { margin-bottom: 3px; }
+  .routeaddr { color: var(--text-muted); }
+  .routestore { color: var(--text); text-decoration: none; font-weight: 700; }
+  .routestore:hover { color: var(--accent); text-decoration: underline; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+  #gateOverlay {
+    position: fixed; inset: 0; background: var(--bg); z-index: 1000;
+    display: none; align-items: center; justify-content: center;
+  }
+  .gatebox {
+    background: var(--card); border: 1px solid var(--border-soft); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-hover); padding: 32px; width: min(90vw, 340px); text-align: center;
+  }
+  .gatebox h2 { font-size: 16px; margin: 0 0 16px; }
+  .gatebox input {
+    width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 10px 12px; color: var(--text); font-size: 14px; margin-bottom: 12px;
+  }
+  .gatebox button {
+    width: 100%; border: none; background: var(--accent); color: var(--accent-contrast);
+    border-radius: var(--radius-sm); padding: 10px; font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+  .gateerror { color: var(--warn-text); font-size: 12.5px; margin-top: 10px; min-height: 1em; }
+</style>
+</head>
+<body>
+<div id="gateOverlay">
+  <div class="gatebox">
+    <h2>비밀번호 입력</h2>
+    <input type="password" id="gatePw" placeholder="비밀번호" autocomplete="off">
+    <button id="gateBtn" type="button">확인</button>
+    <div class="gateerror" id="gateError"></div>
+  </div>
+</div>
+<h1>푸드원시스템 강남구 영업 리스트업</h1>
+<div class="sub" id="subHeader">전체 0개 업체 · 생성일 </div>
+<div class="legend">
+  <span><b>A그룹</b>: 돈카츠/일식 계열 메뉴를 이미 취급 중으로 추정 (가장 우선)</span>
+  <span><b>B그룹</b>: 메뉴 확장 제안이 통할 만한 잠재 신규 거래처</span>
+  <span><b>C그룹</b>: A/B에 해당 안 되는 저우선순위</span>
+  <span><b>스코어</b>: 그룹·메인메뉴 여부·매칭신뢰도 종합, 프랜차이즈는 감점 (10점 만점, config/settings.py에서 조정 가능)</span>
+</div>
+
+<details class="routes">
+  <summary>자동 방문동선 (A그룹 상위 업체를 행정동별 · 하루 단위로 자동 분할)</summary>
+  <div class="routegrid"></div>
+</details>
+
+<div class="panel filters">
+  <div class="field">
+    <label>검색 (상호명 / 주소)</label>
+    <input type="text" id="q" placeholder="예: 돈카츠, 역삼동">
+  </div>
+  <div class="field">
+    <label>그룹</label>
+    <div class="chips" id="groupChips">
+      <div class="chip active" data-group="A">A그룹</div>
+      <div class="chip active" data-group="B">B그룹</div>
+      <div class="chip active" data-group="C">C그룹</div>
+    </div>
+  </div>
+  <div class="field">
+    <label>업종</label>
+    <select id="category"><option value="">전체</option></select>
+  </div>
+  <div class="field">
+    <label>상권특성</label>
+    <select id="district"><option value="">전체</option></select>
+  </div>
+  <div class="field">
+    <label>폐업의심</label>
+    <select id="closed">
+      <option value="all">전체</option>
+      <option value="exclude">의심 제외</option>
+      <option value="only">의심만 (전체)</option>
+      <option value="no_candidate">의심만 - 후보조차 없음</option>
+      <option value="weak_candidate">의심만 - 낮은 신뢰도 후보 있음</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>프랜차이즈</label>
+    <select id="franchise">
+      <option value="all">전체</option>
+      <option value="exclude">제외</option>
+      <option value="only">프랜차이즈만</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>정렬</label>
+    <select id="sort">
+      <option value="score_desc">스코어 높은순</option>
+      <option value="score_asc">스코어 낮은순</option>
+      <option value="name_asc">상호명 가나다순</option>
+    </select>
+  </div>
+  <div class="count" id="count"></div>
+</div>
+
+<div class="panel toolbar">
+  <div class="toolbar-row">
+    <span id="selCount">선택 0개</span>
+    <button id="selRoute" disabled>선택한 곳 동선 보기</button>
+    <button id="selClear" class="secondary" disabled>선택 초기화</button>
+    <span class="warn" id="selWarn" style="display:none;"></span>
+  </div>
+  <div class="sellist" id="selList"></div>
+</div>
+
+<div class="panel">
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <th>상호명</th><th>주소</th><th>업종</th><th>네이버 카테고리</th><th>지도</th>
+        <th>그룹</th><th>상권특성</th><th>스코어</th><th>폐업의심</th><th>프랜차이즈</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div class="empty" id="empty" style="display:none;">조건에 맞는 업체가 없습니다.</div>
+  <div class="pager">
+    <button id="prev">이전</button>
+    <span id="pageInfo"></span>
+    <button id="next">다음</button>
+    <span class="jump">
+      <input type="number" id="jumpInput" min="1" step="1">
+      <button id="jumpGo">이동</button>
+    </span>
+  </div>
+</div>
+
+<script>
+let DATA = [];
+const ENC_SALT = null;
+const ENC_DATA = null;
+const ENC_DATA_IV = null;
+const ENC_ROUTES = null;
+const ENC_ROUTES_IV = null;
+const API_MODE = true;
+const PAGE_SIZE = 20;
+let page = 0;
+const selected = new Set();
+
+// 네이버지도 다중경유 도보 길찾기 URL의 좌표 인코딩 (2026-07-23 실측으로 확인됨).
+// 경유 순서는 네이버지도가 자체적으로 최적화해서 재배열해주므로 여기서 계산하지 않는다.
+const B62_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const B62_OFFSET = 2000000000;
+const DUMMY_ID_BASE = 9000000000; // 실제 네이버 place id와 충돌하지 않도록 충분히 큰 값에서 시작
+function encodeNaverCoord(v) {
+  let n = Math.round(v * 10000000) + B62_OFFSET;
+  if (n === 0) return B62_ALPHABET[0];
+  const digits = [];
+  while (n > 0) {
+    digits.push(B62_ALPHABET[n % 62]);
+    n = Math.floor(n / 62);
+  }
+  return digits.reverse().join("");
+}
+function naverRouteUrl(stops) {
+  if (stops.length < 2) return null;
+  // 처음 2곳만 "/"로 구분, 3번째부터는 ":"로 이어붙여 한 구간에 몰아넣는다
+  // ({1번}/{2번}/{3번}:{4번}:{5번}/walk?...) - 실사용자가 네이버지도 "+경유지"로
+  // 만든 5곳짜리 URL을 캡처해서 확인한 구조 (2026-07-23).
+  // 더미 id는 반드시 큰 값이어야 한다 - 1,2,3 같은 작은 정수는 네이버에 실제 등록된 엉뚱한
+  // 업체의 id와 겹쳐서 그 업체 위치로 스냅되는 버그가 있었다(강남 경로가 노원구까지 튀는
+  // 증상으로 발견, 실브라우저 재현 확인, 2026-07-23).
+  const segs = stops.map((s, i) => `${encodeNaverCoord(s.lon)},${encodeNaverCoord(s.lat)},${encodeURIComponent(s.name)},${DUMMY_ID_BASE + i + 1},PLACE_POI`);
+  const path = segs.length <= 2 ? segs.join("/") : segs.slice(0, 2).join("/") + "/" + segs.slice(2).join(":");
+  return `https://map.naver.com/p/directions/${path}/walk?c=17.00,0,0,0,dh`;
+}
+
+const districtSet = [...new Set(DATA.map(r => r.district).filter(Boolean))].sort();
+const districtSel = document.getElementById("district");
+for (const d of districtSet) {
+  const opt = document.createElement("option");
+  opt.value = d; opt.textContent = d;
+  districtSel.appendChild(opt);
+}
+
+const categorySet = [...new Set(DATA.map(r => r.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ko"));
+const categorySel = document.getElementById("category");
+for (const c of categorySet) {
+  const opt = document.createElement("option");
+  opt.value = c; opt.textContent = c;
+  categorySel.appendChild(opt);
+}
+
+const activeGroups = new Set(["A", "B", "C"]);
+document.querySelectorAll("#groupChips .chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    const g = chip.dataset.group;
+    if (activeGroups.has(g)) { activeGroups.delete(g); chip.classList.remove("active"); }
+    else { activeGroups.add(g); chip.classList.add("active"); }
+    page = 0; render();
+  });
+});
+
+function getFiltered() {
+  const q = document.getElementById("q").value.trim().toLowerCase();
+  const category = document.getElementById("category").value;
+  const district = document.getElementById("district").value;
+  const closed = document.getElementById("closed").value;
+  const franchise = document.getElementById("franchise").value;
+  const sort = document.getElementById("sort").value;
+
+  let rows = DATA.filter(r => {
+    if (!activeGroups.has(r.group)) return false;
+    if (category && r.category !== category) return false;
+    if (district && r.district !== district) return false;
+    if (closed === "exclude" && r.closedSuspect) return false;
+    if (closed === "only" && !r.closedSuspect) return false;
+    if ((closed === "no_candidate" || closed === "weak_candidate") && r.closedSuspectReason !== closed) return false;
+    if (franchise === "exclude" && r.isFranchise) return false;
+    if (franchise === "only" && !r.isFranchise) return false;
+    if (q) {
+      const hay = (r.name + " " + r.address + " " + r.naverCategory).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  if (sort === "score_desc") rows.sort((a, b) => b.score - a.score);
+  else if (sort === "score_asc") rows.sort((a, b) => a.score - b.score);
+  else if (sort === "name_asc") rows.sort((a, b) => a.name.localeCompare(b.name, "ko"));
+
+  return rows;
+}
+
+function esc(s) {
+  const d = document.createElement("div");
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function toggleSelect(idx, checked) {
+  if (checked) selected.add(idx); else selected.delete(idx);
+  updateToolbar();
+  render();
+}
+
+function updateToolbar() {
+  document.getElementById("selCount").textContent = `선택 ${selected.size}개`;
+  document.getElementById("selRoute").disabled = selected.size < 2;
+  document.getElementById("selClear").disabled = selected.size === 0;
+  const warn = document.getElementById("selWarn");
+  if (selected.size > 15) {
+    warn.style.display = "inline";
+    warn.textContent = "업체가 많으면 네이버지도에서 경로가 안 열릴 수 있습니다 (15곳 이하 권장)";
+  } else {
+    warn.style.display = "none";
+  }
+
+  const selList = document.getElementById("selList");
+  const selRows = DATA.filter(r => selected.has(r.idx));
+  selList.innerHTML = selRows.map(r => `
+    <span class="selchip">${esc(r.name)}<button type="button" data-idx="${r.idx}" title="선택 해제">×</button></span>
+  `).join("");
+  selList.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => toggleSelect(parseInt(btn.dataset.idx, 10), false));
+  });
+}
+
+function render() {
+  const filtered = getFiltered();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  page = Math.max(0, Math.min(page, totalPages - 1));
+  const slice = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+  document.getElementById("count").textContent = `${filtered.length}개 (전체 ${DATA.length}개 중)`;
+  document.getElementById("pageInfo").textContent = `${page + 1} / ${totalPages} 페이지`;
+  document.getElementById("prev").disabled = page === 0;
+  document.getElementById("next").disabled = page >= totalPages - 1;
+  const jumpInput = document.getElementById("jumpInput");
+  jumpInput.max = totalPages;
+  jumpInput.placeholder = `1-${totalPages}`;
+
+  const tbody = document.getElementById("tbody");
+  const empty = document.getElementById("empty");
+  if (slice.length === 0) {
+    tbody.innerHTML = "";
+    empty.style.display = "block";
+    return;
+  }
+  empty.style.display = "none";
+
+  tbody.innerHTML = slice.map(r => `
+    <tr>
+      <td><input type="checkbox" class="rowcheck" data-idx="${r.idx}" ${selected.has(r.idx) ? "checked" : ""}></td>
+      <td>${esc(r.name)}</td>
+      <td>${esc(r.address)}</td>
+      <td>${esc(r.category)}</td>
+      <td>${esc(r.naverCategory)}</td>
+      <td><a class="maplink" href="${r.naverMapUrl}" target="_blank" rel="noopener">지도보기</a></td>
+      <td><span class="badge badge-${esc(r.group)}">${esc(r.group)}</span></td>
+      <td>${esc(r.district)}</td>
+      <td>${r.score}</td>
+      <td>${r.closedSuspect ? (r.closedSuspectReason === "weak_candidate"
+        ? `<span class="warn">의심 (유사후보 있음)</span><div class="nearmiss">→ ${esc(r.nearMissName)}</div>`
+        : '<span class="warn">의심 (후보없음)</span>') : ''}</td>
+      <td>${r.isFranchise ? `<a class="warn franchiselink" href="${r.franchiseHqUrl}" target="_blank" rel="noopener" title="${esc(r.franchiseBrand)} 본사 검색">프랜차이즈</a>` : ''}</td>
+    </tr>
+  `).join("");
+
+  tbody.querySelectorAll(".rowcheck").forEach(cb => {
+    cb.addEventListener("change", () => {
+      const idx = parseInt(cb.dataset.idx, 10);
+      if (cb.checked) selected.add(idx); else selected.delete(idx);
+      updateToolbar();
+    });
+  });
+}
+
+document.getElementById("q").addEventListener("input", () => { page = 0; render(); });
+document.getElementById("category").addEventListener("change", () => { page = 0; render(); });
+document.getElementById("district").addEventListener("change", () => { page = 0; render(); });
+document.getElementById("closed").addEventListener("change", () => { page = 0; render(); });
+document.getElementById("franchise").addEventListener("change", () => { page = 0; render(); });
+document.getElementById("sort").addEventListener("change", () => { page = 0; render(); });
+document.getElementById("prev").addEventListener("click", () => { page--; render(); });
+document.getElementById("next").addEventListener("click", () => { page++; render(); });
+
+function openInNewTab(url) {
+  // window.open()은 일부 브라우저/확장프로그램에서 팝업으로 취급돼 막히는 경우가 있어서,
+  // 실제 <a> 태그를 만들어 클릭시키는 방식을 쓴다 (진짜 링크 클릭은 거의 차단되지 않음).
+  const a = document.createElement("a");
+  a.href = url;
+  a.target = "_blank";
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+document.getElementById("selRoute").addEventListener("click", () => {
+  const stops = DATA.filter(r => selected.has(r.idx) && r.lon != null && r.lat != null)
+    .map(r => ({name: r.name, lon: r.lon, lat: r.lat}));
+  const url = naverRouteUrl(stops);
+  if (url) openInNewTab(url);
+});
+document.getElementById("selClear").addEventListener("click", () => {
+  selected.clear();
+  updateToolbar();
+  render();
+});
+
+function jumpToPage() {
+  const input = document.getElementById("jumpInput");
+  const n = parseInt(input.value, 10);
+  if (!Number.isNaN(n)) { page = n - 1; render(); }
+  input.value = "";
+}
+document.getElementById("jumpGo").addEventListener("click", jumpToPage);
+document.getElementById("jumpInput").addEventListener("keydown", e => { if (e.key === "Enter") jumpToPage(); });
+
+function b64ToBytes(b64) {
+  const bin = atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return arr;
+}
+
+async function deriveGateKey(password) {
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]
+  );
+  return crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt: b64ToBytes(ENC_SALT), iterations: 100000, hash: "SHA-256" },
+    keyMaterial, { name: "AES-GCM", length: 256 }, false, ["decrypt"]
+  );
+}
+
+async function decryptBlob(key, cipherB64, ivB64) {
+  const plainBuf = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: b64ToBytes(ivB64) }, key, b64ToBytes(cipherB64)
+  );
+  return new TextDecoder().decode(plainBuf);
+}
+
+async function unlockGate(password) {
+  const key = await deriveGateKey(password);
+  const dataText = await decryptBlob(key, ENC_DATA, ENC_DATA_IV);
+  DATA = JSON.parse(dataText);
+  if (ENC_ROUTES) {
+    document.querySelector(".routegrid").innerHTML = await decryptBlob(key, ENC_ROUTES, ENC_ROUTES_IV);
+  }
+  document.getElementById("gateOverlay").style.display = "none";
+  updateToolbar();
+  render();
+}
+
+async function tryLoadFromApi() {
+  const resp = await fetch("/api/data");
+  if (!resp.ok) return false;
+  const json = await resp.json();
+  DATA = json.rows;
+  document.querySelector(".routegrid").innerHTML = json.routesHtml || "";
+  const generatedDate = json.generatedAt ? json.generatedAt.slice(0, 10) : "";
+  document.getElementById("subHeader").textContent = `전체 ${json.total}개 업체 · 생성일 ${generatedDate}`;
+  return true;
+}
+
+async function unlockGateApi(password) {
+  const loginResp = await fetch("/api/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password }),
+  });
+  if (!loginResp.ok) throw new Error("bad password");
+  if (!(await tryLoadFromApi())) throw new Error("data fetch failed after login");
+}
+
+if (ENC_DATA) {
+  const overlay = document.getElementById("gateOverlay");
+  const pwInput = document.getElementById("gatePw");
+  const tryUnlock = () => {
+    unlockGate(pwInput.value).catch(() => {
+      document.getElementById("gateError").textContent = "비밀번호가 틀렸습니다.";
+    });
+  };
+  overlay.style.display = "flex";
+  document.getElementById("gateBtn").addEventListener("click", tryUnlock);
+  pwInput.addEventListener("keydown", e => { if (e.key === "Enter") tryUnlock(); });
+  pwInput.focus();
+} else if (API_MODE) {
+  const overlay = document.getElementById("gateOverlay");
+  const pwInput = document.getElementById("gatePw");
+  const finish = () => {
+    overlay.style.display = "none";
+    updateToolbar();
+    render();
+  };
+  const tryUnlock = () => {
+    unlockGateApi(pwInput.value).then(finish).catch(() => {
+      document.getElementById("gateError").textContent = "비밀번호가 틀렸습니다.";
+    });
+  };
+  document.getElementById("gateBtn").addEventListener("click", tryUnlock);
+  pwInput.addEventListener("keydown", e => { if (e.key === "Enter") tryUnlock(); });
+  // 이미 유효한 세션 쿠키가 있으면(재방문) 비밀번호 입력 없이 바로 로드된다.
+  tryLoadFromApi().then(ok => {
+    if (ok) { finish(); return; }
+    overlay.style.display = "flex";
+    pwInput.focus();
+  });
+} else {
+  updateToolbar();
+  render();
+}
+</script>
+</body>
+</html>

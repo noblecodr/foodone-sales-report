@@ -1,0 +1,9 @@
+{
+  "name": "foodone-sales-report",
+  "private": true,
+  "version": "1.0.0",
+  "description": "푸드원시스템 강남구 영업 리스트업 - 공개 배포용 (Vercel + Supabase)",
+  "engines": {
+    "node": ">=18"
+  }
+}

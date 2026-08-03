@@ -479,6 +479,24 @@ function render() {
 
 document.getElementById("q").addEventListener("input", () => { page = 0; render(); });
 document.getElementById("category").addEventListener("input", () => { page = 0; render(); });
+{
+  // <input list>는 값이 이미 채워져 있으면 클릭/포커스만으론 브라우저가 드롭다운을 다시
+  // 안 띄운다(타이핑으로 값이 바뀔 때만 옵션을 보여줌) - 한 번 카테고리를 고르고 나면
+  // 드롭다운이 안 열리는 문제(2026-08-03 사용자 제보). 포커스 시 값을 비워서(전체 옵션이
+  // 다시 뜨도록) 강제하고, 아무것도 새로 고르지 않고 포커스를 벗어나면(blur) 원래 값을
+  // 복원한다 - 값을 코드로 비우고 복원하는 건 "input" 이벤트를 안 일으켜서 표 필터링
+  // 상태(applyFilters가 실제로 읽는 값)와 어긋나지 않는다.
+  const categoryInput = document.getElementById("category");
+  categoryInput.addEventListener("focus", () => {
+    categoryInput.dataset.prevValue = categoryInput.value;
+    categoryInput.value = "";
+  });
+  categoryInput.addEventListener("blur", () => {
+    if (categoryInput.value.trim() === "" && categoryInput.dataset.prevValue) {
+      categoryInput.value = categoryInput.dataset.prevValue;
+    }
+  });
+}
 document.getElementById("district").addEventListener("change", () => { page = 0; render(); });
 document.getElementById("closed").addEventListener("change", () => { page = 0; render(); });
 document.getElementById("franchise").addEventListener("change", () => { page = 0; render(); });

@@ -163,6 +163,26 @@
     border-radius: var(--radius-sm); padding: 10px; font-size: 14px; font-weight: 700; cursor: pointer;
   }
   .gateerror { color: var(--warn-text); font-size: 12.5px; margin-top: 10px; min-height: 1em; }
+  .tablewrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: -18px -20px; padding: 18px 20px; }
+  table { min-width: 760px; }
+  /* 모바일(영업사원이 현장에서 폰으로 확인하는 용도, 2026-08-03 사용자 요청) - 표는 위
+  .tablewrap이 가로 스크롤 처리하고, 여기선 필터 패널을 세로로 쌓아 한 줄에 하나씩
+  손가락으로 조작하기 편하게 만든다. */
+  @media (max-width: 640px) {
+    body { padding: 18px 14px; font-size: 13.5px; }
+    h1 { font-size: 19px; }
+    .panel, details.routes { padding: 14px 16px; }
+    .tablewrap { margin: -14px -16px; padding: 14px 16px; }
+    .legend { padding: 10px 12px; gap: 6px 16px; font-size: 12px; }
+    .filters { flex-direction: column; align-items: stretch; gap: 12px; }
+    .field { width: 100%; }
+    input[type="text"], select { min-width: 0; width: 100%; }
+    .count { margin-left: 0; align-self: flex-start; }
+    .routegrid { grid-template-columns: 1fr; }
+    .pager { flex-wrap: wrap; gap: 8px 10px; }
+    .jump { margin-left: 0; }
+    .toolbar-row { gap: 8px 10px; }
+  }
 </style>
 </head>
 <body>
@@ -256,6 +276,7 @@
 </div>
 
 <div class="panel">
+  <div class="tablewrap">
   <table>
     <thead>
       <tr>
@@ -266,6 +287,7 @@
     </thead>
     <tbody id="tbody"></tbody>
   </table>
+  </div>
   <div class="empty" id="empty" style="display:none;">조건에 맞는 업체가 없습니다.</div>
   <div class="pager">
     <button id="prev">이전</button>

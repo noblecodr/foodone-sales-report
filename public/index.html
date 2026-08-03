@@ -67,6 +67,7 @@
   .badge-B { background: var(--b-bg); color: var(--b-text); }
   .badge-C { background: var(--c-bg); color: var(--c-text); }
   .warn { background: var(--warn-bg); color: var(--warn-text); border-radius: 6px; padding: 3px 8px; font-size: 11.5px; font-weight: 600; }
+  .unlisted { color: var(--text-muted); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
   a.franchiselink { text-decoration: none; cursor: pointer; }
   a.franchiselink:hover { text-decoration: underline; }
   .nearmiss { color: var(--text-muted); font-size: 11px; margin-top: 3px; white-space: nowrap; }
@@ -187,6 +188,11 @@
   <div class="routegrid"></div>
 </details>
 
+<details class="routes">
+  <summary>자동 방문동선 - 테헤란로 151 기준 (A그룹 상위 업체를 가까운 순 · 하루 단위로 자동 분할)</summary>
+  <div class="routegrid routegrid2"></div>
+</details>
+
 <div class="panel filters">
   <div class="field">
     <label>검색 (상호명 / 주소)</label>
@@ -201,8 +207,9 @@
     </div>
   </div>
   <div class="field">
-    <label>업종</label>
-    <select id="category"><option value="">전체</option></select>
+    <label>네이버 카테고리</label>
+    <input type="text" id="category" list="categoryOptions" placeholder="전체 (입력해서 검색)" autocomplete="off">
+    <datalist id="categoryOptions"></datalist>
   </div>
   <div class="field">
     <label>상권특성</label>
@@ -232,6 +239,7 @@
       <option value="score_desc">스코어 높은순</option>
       <option value="score_asc">스코어 낮은순</option>
       <option value="name_asc">상호명 가나다순</option>
+      <option value="distance_asc">기준점에서 가까운순</option>
     </select>
   </div>
   <div class="count" id="count"></div>
@@ -253,7 +261,7 @@
       <tr>
         <th></th>
         <th>상호명</th><th>주소</th><th>업종</th><th>네이버 카테고리</th><th>지도</th>
-        <th>그룹</th><th>상권특성</th><th>스코어</th><th>폐업의심</th><th>프랜차이즈</th>
+        <th>그룹</th><th>상권특성</th><th>스코어</th><th>기준점 거리</th><th>폐업의심</th><th>프랜차이즈</th>
       </tr>
     </thead>
     <tbody id="tbody"></tbody>
@@ -277,6 +285,8 @@ const ENC_DATA = null;
 const ENC_DATA_IV = null;
 const ENC_ROUTES = null;
 const ENC_ROUTES_IV = null;
+const ENC_ROUTES2 = null;
+const ENC_ROUTES2_IV = null;
 const API_MODE = true;
 const PAGE_SIZE = 20;
 let page = 0;
@@ -310,21 +320,30 @@ function naverRouteUrl(stops) {
   return `https://map.naver.com/p/directions/${path}/walk?c=17.00,0,0,0,dh`;
 }
 
-const districtSet = [...new Set(DATA.map(r => r.district).filter(Boolean))].sort();
-const districtSel = document.getElementById("district");
-for (const d of districtSet) {
-  const opt = document.createElement("option");
-  opt.value = d; opt.textContent = d;
-  districtSel.appendChild(opt);
-}
+function populateFilterOptions() {
+  const districtSel = document.getElementById("district");
+  const categoryList = document.getElementById("categoryOptions");
+  districtSel.innerHTML = '<option value="">전체</option>';
+  categoryList.innerHTML = "";
 
-const categorySet = [...new Set(DATA.map(r => r.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ko"));
-const categorySel = document.getElementById("category");
-for (const c of categorySet) {
-  const opt = document.createElement("option");
-  opt.value = c; opt.textContent = c;
-  categorySel.appendChild(opt);
+  const districtSet = [...new Set(DATA.map(r => r.district).filter(Boolean))].sort();
+  for (const d of districtSet) {
+    const opt = document.createElement("option");
+    opt.value = d; opt.textContent = d;
+    districtSel.appendChild(opt);
+  }
+
+  const categorySet = [...new Set(DATA.map(r => r.naverCategory).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ko"));
+  for (const c of categorySet) {
+    const opt = document.createElement("option");
+    opt.value = c;
+    categoryList.appendChild(opt);
+  }
 }
+// 로컬/암호화 모드는 DATA가 이 시점에 이미 채워져 있어 바로 호출. API 모드는 DATA가 로그인 후
+// 비동기로 채워지므로 tryLoadFromApi/unlockGate 쪽에서 다시 호출한다 (2026-07-29, 배포 사이트에서
+// 드롭다운이 빈 채로 뜨던 버그 - 이 함수가 DATA가 비어있을 때 딱 한 번만 실행돼서 생긴 문제였음).
+populateFilterOptions();
 
 const activeGroups = new Set(["A", "B", "C"]);
 document.querySelectorAll("#groupChips .chip").forEach(chip => {
@@ -338,7 +357,7 @@ document.querySelectorAll("#groupChips .chip").forEach(chip => {
 
 function getFiltered() {
   const q = document.getElementById("q").value.trim().toLowerCase();
-  const category = document.getElementById("category").value;
+  const category = document.getElementById("category").value.trim().toLowerCase();
   const district = document.getElementById("district").value;
   const closed = document.getElementById("closed").value;
   const franchise = document.getElementById("franchise").value;
@@ -346,7 +365,7 @@ function getFiltered() {
 
   let rows = DATA.filter(r => {
     if (!activeGroups.has(r.group)) return false;
-    if (category && r.category !== category) return false;
+    if (category && !(r.naverCategory || "").toLowerCase().includes(category)) return false;
     if (district && r.district !== district) return false;
     if (closed === "exclude" && r.closedSuspect) return false;
     if (closed === "only" && !r.closedSuspect) return false;
@@ -363,6 +382,7 @@ function getFiltered() {
   if (sort === "score_desc") rows.sort((a, b) => b.score - a.score);
   else if (sort === "score_asc") rows.sort((a, b) => a.score - b.score);
   else if (sort === "name_asc") rows.sort((a, b) => a.name.localeCompare(b.name, "ko"));
+  else if (sort === "distance_asc") rows.sort((a, b) => (a.distanceFromBase ?? Infinity) - (b.distanceFromBase ?? Infinity));
 
   return rows;
 }
@@ -371,6 +391,11 @@ function esc(s) {
   const d = document.createElement("div");
   d.textContent = s;
   return d.innerHTML;
+}
+
+function formatDist(m) {
+  if (m === null || m === undefined) return "";
+  return m < 1000 ? `${m}m` : `${(m / 1000).toFixed(1)}km`;
 }
 
 function toggleSelect(idx, checked) {
@@ -435,9 +460,10 @@ function render() {
       <td><span class="badge badge-${esc(r.group)}">${esc(r.group)}</span></td>
       <td>${esc(r.district)}</td>
       <td>${r.score}</td>
+      <td>${formatDist(r.distanceFromBase)}</td>
       <td>${r.closedSuspect ? (r.closedSuspectReason === "weak_candidate"
         ? `<span class="warn">의심 (유사후보 있음)</span><div class="nearmiss">→ ${esc(r.nearMissName)}</div>`
-        : '<span class="warn">의심 (후보없음)</span>') : ''}</td>
+        : '<span class="warn">의심 (후보없음)</span>') : (r.naverUnlisted ? '<span class="unlisted">네이버 미등록(영업확인)</span>' : '')}</td>
       <td>${r.isFranchise ? `<a class="warn franchiselink" href="${r.franchiseHqUrl}" target="_blank" rel="noopener" title="${esc(r.franchiseBrand)} 본사 검색">프랜차이즈</a>` : ''}</td>
     </tr>
   `).join("");
@@ -452,7 +478,7 @@ function render() {
 }
 
 document.getElementById("q").addEventListener("input", () => { page = 0; render(); });
-document.getElementById("category").addEventListener("change", () => { page = 0; render(); });
+document.getElementById("category").addEventListener("input", () => { page = 0; render(); });
 document.getElementById("district").addEventListener("change", () => { page = 0; render(); });
 document.getElementById("closed").addEventListener("change", () => { page = 0; render(); });
 document.getElementById("franchise").addEventListener("change", () => { page = 0; render(); });
@@ -521,8 +547,12 @@ async function unlockGate(password) {
   const key = await deriveGateKey(password);
   const dataText = await decryptBlob(key, ENC_DATA, ENC_DATA_IV);
   DATA = JSON.parse(dataText);
+  populateFilterOptions();
   if (ENC_ROUTES) {
     document.querySelector(".routegrid").innerHTML = await decryptBlob(key, ENC_ROUTES, ENC_ROUTES_IV);
+  }
+  if (ENC_ROUTES2) {
+    document.querySelector(".routegrid2").innerHTML = await decryptBlob(key, ENC_ROUTES2, ENC_ROUTES2_IV);
   }
   document.getElementById("gateOverlay").style.display = "none";
   updateToolbar();
@@ -534,7 +564,9 @@ async function tryLoadFromApi() {
   if (!resp.ok) return false;
   const json = await resp.json();
   DATA = json.rows;
+  populateFilterOptions();
   document.querySelector(".routegrid").innerHTML = json.routesHtml || "";
+  document.querySelector(".routegrid2").innerHTML = json.routesHtmlBase || "";
   const generatedDate = json.generatedAt ? json.generatedAt.slice(0, 10) : "";
   document.getElementById("subHeader").textContent = `전체 ${json.total}개 업체 · 생성일 ${generatedDate}`;
   return true;

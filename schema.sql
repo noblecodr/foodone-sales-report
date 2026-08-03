@@ -14,3 +14,6 @@ create table if not exists site_snapshot (
 -- service_role 키(서버 쪽 Vercel 함수에서만 사용, 브라우저에 절대 노출 안 됨)는 RLS를 우회하므로
 -- 정상적으로 읽고 쓸 수 있다.
 alter table site_snapshot enable row level security;
+
+-- 기준점(테헤란로 151) 거리 기반 방문동선 섹션 추가 시 도입 (2026-07-29).
+alter table site_snapshot add column if not exists routes_html_base text;

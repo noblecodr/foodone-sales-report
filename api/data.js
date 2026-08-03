@@ -30,7 +30,7 @@ module.exports = async (req, res) => {
   }
 
   const resp = await fetch(
-    `${process.env.SUPABASE_URL}/rest/v1/site_snapshot?id=eq.1&select=rows_json,routes_html,total,generated_at`,
+    `${process.env.SUPABASE_URL}/rest/v1/site_snapshot?id=eq.1&select=rows_json,routes_html,routes_html_base,total,generated_at`,
     {
       headers: {
         apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -51,6 +51,7 @@ module.exports = async (req, res) => {
   res.status(200).json({
     rows: snapshot.rows_json,
     routesHtml: snapshot.routes_html,
+    routesHtmlBase: snapshot.routes_html_base,
     total: snapshot.total,
     generatedAt: snapshot.generated_at,
   });

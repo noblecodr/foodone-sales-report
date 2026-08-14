@@ -13,8 +13,10 @@
     --accent: #a97f3f; --accent-hover: #8c6730; --accent-soft: #f4ead2; --accent-contrast: #ffffff;
     --a-bg: #e6ebf4; --b-bg: #f1e4c2; --c-bg: #efece1;
     --a-text: #17233f; --b-text: #6b4a17; --c-text: #55503f;
+    --a-dot: #4a6bb5; --b-dot: #b49259; --c-dot: #9b9483;
     --warn-bg: #fbe6cd; --warn-text: #7a3b06;
-    --radius-lg: 14px; --radius-md: 10px; --radius-sm: 7px;
+    --navy: #142447; --navy-soft: #1e3364;
+    --radius-lg: 16px; --radius-md: 11px; --radius-sm: 8px;
   }
   /* 시스템이 다크모드여도 항상 밝은 버전을 기본으로 쓴다 (2026-07-23 사용자 요청) */
   * { box-sizing: border-box; }
@@ -24,9 +26,31 @@
     font-size: 14px; line-height: 1.5; max-width: 1320px; margin-inline: auto;
     -webkit-font-smoothing: antialiased;
   }
-  h1 { font-size: 22px; font-weight: 700; margin: 0 0 5px; letter-spacing: -0.01em; }
+  h1 { font-size: 22px; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
   h2 { font-size: 15px; font-weight: 600; margin: 0 0 10px; }
-  .sub { color: var(--text-muted); margin-bottom: 22px; font-size: 13px; }
+  .sub { color: var(--text-muted); font-size: 13px; }
+  .hero {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-soft) 100%);
+    border-radius: var(--radius-lg); padding: 22px 26px; margin-bottom: 18px;
+    box-shadow: var(--shadow-hover);
+  }
+  .hero-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .brand-mark {
+    width: 42px; height: 42px; border-radius: 12px; background: var(--accent); color: #fff;
+    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 17px;
+    letter-spacing: -0.02em; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  }
+  .hero h1 { color: #fff; }
+  .hero .sub { color: rgba(255,255,255,0.62); margin-top: 2px; }
+  .statchips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .statchip {
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 999px; padding: 6px 14px 6px 11px; font-size: 12.5px; font-weight: 700;
+    color: #fff; display: flex; align-items: center; gap: 7px; white-space: nowrap;
+  }
+  .statchip .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .statchip .n { color: rgba(255,255,255,0.55); font-weight: 600; }
   .panel {
     background: var(--card); border: 1px solid var(--border-soft); border-radius: var(--radius-lg);
     box-shadow: var(--shadow); padding: 18px 20px; margin-bottom: 18px;
@@ -54,8 +78,9 @@
   table { width: 100%; border-collapse: collapse; }
   th, td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--border-soft); }
   th {
-    font-size: 11.5px; color: var(--text-muted); font-weight: 700; white-space: nowrap; cursor: pointer;
-    text-transform: uppercase; letter-spacing: 0.03em; position: sticky; top: 0; background: var(--card); z-index: 1;
+    font-size: 11px; color: var(--text-muted); font-weight: 700; white-space: nowrap; cursor: pointer;
+    text-transform: uppercase; letter-spacing: 0.04em; position: sticky; top: 0; background: var(--card); z-index: 1;
+    border-bottom: 2px solid var(--border);
   }
   th:hover { color: var(--accent); }
   td { font-size: 13px; vertical-align: top; }
@@ -66,13 +91,24 @@
   .badge-A { background: var(--a-bg); color: var(--a-text); }
   .badge-B { background: var(--b-bg); color: var(--b-text); }
   .badge-C { background: var(--c-bg); color: var(--c-text); }
+  .scorebadge {
+    display: inline-flex; align-items: center; justify-content: center; min-width: 27px; height: 22px;
+    padding: 0 7px; border-radius: 7px; font-weight: 800; font-size: 12.5px; font-variant-numeric: tabular-nums;
+  }
+  .scorebadge-high { background: var(--accent-soft); color: var(--accent-hover); }
+  .scorebadge-mid { background: var(--border-soft); color: var(--text); }
+  .scorebadge-low { background: transparent; color: var(--text-muted); border: 1px solid var(--border-soft); }
   .warn { background: var(--warn-bg); color: var(--warn-text); border-radius: 6px; padding: 3px 8px; font-size: 11.5px; font-weight: 600; }
   .unlisted { color: var(--text-muted); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
   a.franchiselink { text-decoration: none; cursor: pointer; }
   a.franchiselink:hover { text-decoration: underline; }
   .nearmiss { color: var(--text-muted); font-size: 11px; margin-top: 3px; white-space: nowrap; }
-  .maplink { color: var(--accent); text-decoration: none; font-weight: 600; white-space: nowrap; }
-  .maplink:hover { color: var(--accent-hover); text-decoration: underline; }
+  .maplink {
+    display: inline-block; background: var(--accent-soft); color: var(--accent-hover);
+    text-decoration: none; font-weight: 700; white-space: nowrap; font-size: 12px;
+    padding: 4px 11px; border-radius: 999px; transition: all 0.15s ease;
+  }
+  .maplink:hover { background: var(--accent); color: var(--accent-contrast); }
   .pager { display: flex; align-items: center; gap: 10px; margin-top: 16px; justify-content: center; }
   .pager button {
     border: 1px solid var(--border); background: var(--card); color: var(--text);
@@ -171,6 +207,9 @@
   @media (max-width: 640px) {
     body { padding: 18px 14px; font-size: 13.5px; }
     h1 { font-size: 19px; }
+    .hero { padding: 18px; }
+    .hero-top { align-items: flex-start; }
+    .statchips { width: 100%; }
     .panel, details.routes { padding: 14px 16px; }
     .tablewrap { margin: -14px -16px; padding: 14px 16px; }
     .legend { padding: 10px 12px; gap: 6px 16px; font-size: 12px; }
@@ -194,8 +233,18 @@
     <div class="gateerror" id="gateError"></div>
   </div>
 </div>
-<h1>푸드원시스템 강남구 영업 리스트업</h1>
-<div class="sub" id="subHeader">전체 0개 업체 · 생성일 </div>
+<div class="hero">
+  <div class="hero-top">
+    <div class="brand">
+      <div class="brand-mark">F1</div>
+      <div>
+        <h1>푸드원시스템 강남구 영업 리스트업</h1>
+        <div class="sub" id="subHeader">전체 0개 업체 · 생성일 </div>
+      </div>
+    </div>
+    <div class="statchips" id="statChips"></div>
+  </div>
+</div>
 <div class="legend">
   <span><b>A그룹</b>: 돈카츠/일식 계열 메뉴를 이미 취급 중으로 추정 (가장 우선)</span>
   <span><b>B그룹</b>: 메뉴 확장 제안이 통할 만한 잠재 신규 거래처</span>
@@ -366,6 +415,7 @@ function populateFilterOptions() {
 // 비동기로 채워지므로 tryLoadFromApi/unlockGate 쪽에서 다시 호출한다 (2026-07-29, 배포 사이트에서
 // 드롭다운이 빈 채로 뜨던 버그 - 이 함수가 DATA가 비어있을 때 딱 한 번만 실행돼서 생긴 문제였음).
 populateFilterOptions();
+updateStatChips();
 
 const activeGroups = new Set(["A", "B", "C"]);
 document.querySelectorAll("#groupChips .chip").forEach(chip => {
@@ -426,6 +476,21 @@ function toggleSelect(idx, checked) {
   render();
 }
 
+function scoreBadge(score) {
+  const tier = score >= 8 ? "high" : score >= 4 ? "mid" : "low";
+  return `<span class="scorebadge scorebadge-${tier}">${score}</span>`;
+}
+
+function updateStatChips() {
+  const counts = { A: 0, B: 0, C: 0 };
+  DATA.forEach(r => { if (counts[r.group] !== undefined) counts[r.group]++; });
+  const chip = (label, key, dotVar) => `
+    <span class="statchip"><span class="dot" style="background: var(${dotVar})"></span>${label} <span class="n">${counts[key]}</span></span>`;
+  document.getElementById("statChips").innerHTML =
+    `<span class="statchip">전체 <span class="n">${DATA.length}</span></span>`
+    + chip("A그룹", "A", "--a-dot") + chip("B그룹", "B", "--b-dot") + chip("C그룹", "C", "--c-dot");
+}
+
 function updateToolbar() {
   document.getElementById("selCount").textContent = `선택 ${selected.size}개`;
   document.getElementById("selRoute").disabled = selected.size < 2;
@@ -481,7 +546,7 @@ function render() {
       <td><a class="maplink" href="${r.naverMapUrl}" target="_blank" rel="noopener">지도보기</a></td>
       <td><span class="badge badge-${esc(r.group)}">${esc(r.group)}</span></td>
       <td>${esc(r.district)}</td>
-      <td>${r.score}</td>
+      <td>${scoreBadge(r.score)}</td>
       <td>${formatDist(r.distanceFromBase)}</td>
       <td>${r.closedSuspect ? (r.closedSuspectReason === "weak_candidate"
         ? `<span class="warn">의심 (유사후보 있음)</span><div class="nearmiss">→ ${esc(r.nearMissName)}</div>`
@@ -588,6 +653,7 @@ async function unlockGate(password) {
   const dataText = await decryptBlob(key, ENC_DATA, ENC_DATA_IV);
   DATA = JSON.parse(dataText);
   populateFilterOptions();
+  updateStatChips();
   if (ENC_ROUTES) {
     document.querySelector(".routegrid").innerHTML = await decryptBlob(key, ENC_ROUTES, ENC_ROUTES_IV);
   }
@@ -605,6 +671,7 @@ async function tryLoadFromApi() {
   const json = await resp.json();
   DATA = json.rows;
   populateFilterOptions();
+  updateStatChips();
   document.querySelector(".routegrid").innerHTML = json.routesHtml || "";
   document.querySelector(".routegrid2").innerHTML = json.routesHtmlBase || "";
   const generatedDate = json.generatedAt ? json.generatedAt.slice(0, 10) : "";
